@@ -8,15 +8,48 @@ data for evaluation. Trained a model on the non-anamolous training data achievin
 
 ## Technologies
 * Python3
-
-Libraries
-
-* NumPy
-* Pandas
-* Scikit-learn
-* Seaborn
-* Matplotlib
+  * NumPy
+  * Pandas
+  * Scikit-learn
+  * Seaborn
+  * Matplotlib
 
 ## Initial Pairplot
 
-![](img/init_pairplot.png?raw=true "Title")
+[](img/init_pairplot.png?raw=true "Title")
+
+Observing the pairplot,
+
+The features
+  * x0, x2
+  * x0, x3
+  * x1, x3
+  * x2, x3
+  * x4, x5
+  * x4, x6
+  * x4, x7
+  * x5, x6
+  * x5, x7
+  * x6, x7
+
+are dependent(near to linearly dependent for most examples).
+
+## Adding new features
+
+Adding new features to cover the examples.
+
+  * x8 = x0/x2
+  * x9 = x0/x3
+  * x10 = x1/x3
+  * x11 = x2/x3
+  * x12 = x4/x5
+  * x13 = x4/x6
+  * x14 = x4/x7
+  * x15 = x5/x6
+  * x16 = x5/x7
+  * x17 = x6/x7
+
+
+
+
+  
