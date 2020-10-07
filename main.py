@@ -93,7 +93,7 @@ test_labels=test.pop('y')
 #initial pairplot to find linearly dependent features
 
 sns.pairplot(train,diag_kind='kde',plot_kws={'s':7})
-plt.savefig('init_pairplot.png')
+plt.savefig('img/init_pairplot.png')
 plt.close()
 
 
@@ -104,7 +104,8 @@ test=addNewFeats(test)
 
 #Initial histograms of the features
 train.hist(bins=50,figsize=(13,13))
-plt.savefig('init_hist.png')
+plt.tight_layout()
+plt.savefig('img/init_hist.png')
 plt.close()
 
 orig_mean=train.mean()
@@ -123,7 +124,8 @@ cv=transformFeats(cv)
 test=transformFeats(test)
 
 train.hist(bins=50,figsize=(13,13))
-plt.savefig('transformed_hist.png')
+plt.tight_layout()
+plt.savefig('img/transformed_hist.png')
 plt.close()
 
 
@@ -167,9 +169,15 @@ for epsilon in cv_pval:
 		bestEpsilon=epsilon
 	history.append(bestF1)
 
-
+plt.plot (history)
+plt.xlabel('ObservedExamples of CV set')
+plt.ylabel('F1-Score')
+plt.savefig('img/history.png')
+plt.close()
 
 #Test set probabilities
+
+
 
 test_probs= np.exp((((test-train_mean)/(train_std)) ** 2) * (-1/2)) / (np.sqrt(2 * np.pi) * train_std) #Features' individual probability value
 test_pval = [1] * test[clmns[0]].size #Combined probability Value
