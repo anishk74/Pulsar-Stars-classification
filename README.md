@@ -18,7 +18,7 @@ data for evaluation. Trained a model on the non-anamolous training data achievin
 
 [](img/init_pairplot.png?raw=true "Title")
 
-Observing the pairplot,
+Observing the pairplot of training data,
 
 The features
   * x0, x2
@@ -36,7 +36,7 @@ are dependent(near to linearly dependent for most examples).
 
 ## Adding new features
 
-Adding new features to cover the examples.
+Adding new features to training data(as well as cross validation and test data)
 
   * x8 = x0/x2
   * x9 = x0/x3
@@ -49,7 +49,21 @@ Adding new features to cover the examples.
   * x16 = x5/x7
   * x17 = x6/x7
 
+which leads to a histogram of training data
+![](img/init_hist.png?raw=true "Title")
+
+Notice the variance and standard deviation of the added features, those are very less which makes it easier for the model to differentiate anomalies.
+Since the range of the features are 
+
+## Transforming the features to Gaussian-like
+
+Using log, squareroot and other transformation techniques, we can convert a feature to Gaussian-like. 
+The transformed features of training data have a histogram
+![](img/transformed_hist.png?raw=true "Title")
+
+# Performance on Cross-Validation and Test data
+
+Using the mean and std of training data,
+We evaluate the examples of CV data
 
 
-
-  
