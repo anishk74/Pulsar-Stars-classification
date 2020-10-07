@@ -9,5 +9,14 @@ data for evaluation. Trained a model on the non-anamolous training data achievin
 ## Technologies
 * Python3
 
+Libraries
+
+* NumPy
+* Pandas
+* Scikit-learn
+* Seaborn
+* Matplotlib
+
 ## Initial Pairplot
 
+![](img/init_pairplot.png?raw=true "Title")
