@@ -2,7 +2,6 @@ import pandas as pd
 import numpy as np
 import matplotlib as mlp
 import matplotlib.pyplot as plt
-from sklearn.metrics import f1_score
 from sklearn.metrics import recall_score
 from sklearn.metrics import accuracy_score
 
@@ -10,13 +9,18 @@ import seaborn as sns
 
 
 def splitData(dataset):
+
 	frames = [frame for _,frame in dataset.groupby('y')]
 	negds=frames[0]
 	posds=frames[1]
 
-	train, cv, test = np.split(negds, [int(0.7*len(negds)), int(0.85*len(negds))])
+	train, test = np.split(negds, [int(0.7*len(negds))])
 
-	cv_pos, test_pos=  np.split(posds, [int(0.5*len(posds))])
+	test=test.sample(frac=1)
+	cv, test = np.split(test, [int(0.5*len(test))])
+
+	posds=posds.sample(frac=1)
+	cv_pos, test_pos = np.split(posds, [int(0.5*len(posds))])
 
 	cv=cv.append(cv_pos)
 	test=test.append(test_pos)
@@ -169,8 +173,10 @@ for epsilon in cv_pval:
 		bestEpsilon=epsilon
 	history.append(bestF1)
 
+print('F1-score of the model on CV data: ',bestF1)
+
 plt.plot (history)
-plt.xlabel('ObservedExamples of CV set')
+plt.xlabel('Observed Examples of CV set')
 plt.ylabel('F1-Score')
 plt.savefig('img/history.png')
 plt.close()
@@ -190,7 +196,7 @@ acc=accuracy_score(test_labels,pred)
 recall=recall_score(test_labels,pred)
 
 testF1= 2*acc*recall/(acc+recall)
-
+print('F1-score of the model on Test data: ',testF1)
 
 	
 
