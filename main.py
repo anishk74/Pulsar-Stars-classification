@@ -2,10 +2,9 @@ import pandas as pd
 import numpy as np
 import matplotlib as mlp
 import matplotlib.pyplot as plt
-from sklearn.metrics import recall_score
-from sklearn.metrics import accuracy_score
-
 import seaborn as sns
+
+from model.model import Gaussian
 
 
 def splitData(dataset):
@@ -14,12 +13,10 @@ def splitData(dataset):
 	negds=frames[0]
 	posds=frames[1]
 
-	train, test = np.split(negds, [int(0.7*len(negds))])
+	train, test = np.split(negds, [int(0.8*len(negds))])
 
-	test=test.sample(frac=1)
 	cv, test = np.split(test, [int(0.5*len(test))])
 
-	posds=posds.sample(frac=1)
 	cv_pos, test_pos = np.split(posds, [int(0.5*len(posds))])
 
 	cv=cv.append(cv_pos)
@@ -30,49 +27,19 @@ def splitData(dataset):
 
 #Transform the features to an approximate Gaussian distribution
 def transformFeats(ds):
-	ds['x1']=(ds['x1']+4)**(1/5)
-	ds['x2']=np.sqrt(ds['x2']+7)
-	ds['x3']=np.log(ds['x3']+2.2)
-	ds['x4']=np.log(ds['x4']+0.355)
-	ds['x5']=np.log(ds['x5']+1.1)
-	ds['x6']=np.sqrt(ds['x6']+4)
-	ds['x7']=(ds['x7']+1.1)**(1/5)
-
-	ds['x8']=np.log(ds['x8']+50)
-	ds['x9']=np.log(ds['x9']+150)
-	ds['x10']=np.log(ds['x10']+250)
-
-	ds['x11']=((ds['x11']+100)**3)/1000000
-	
-	ds['x12']=np.log(ds['x12']+0.53)
-	ds['x13']=np.log((ds['x13'] + 0.68))
-	ds['x14']=((ds['x14']+80)**(1.5))
-	ds['x15']=np.log((ds['x15'] + 1.8))
-	ds['x16']=np.log((ds['x16'] + 0.74))
-
-	ds['x17']=((ds['x17']+100)**(1/2))
-
+	ds['x0']=(ds['x0']+1)**2
+	ds['x1']=(np.log((ds['x1']+0.1)))
+	ds['x2']=np.log(ds['x2']+0.18)
+	ds['x3']=np.log(ds['x3']+0.004)
+	ds['x4']=np.log(ds['x4']+0.0001)
+	ds['x5']=np.log(ds['x5']+0.012)
+	ds['x6']=np.log(ds['x6']+0.23)
+	ds['x7']=(ds['x7']+10**-4)**(0.26)
 	return ds
 
 
-def addNewFeats(ds):
-	ds['x8']=ds['x0']/ds['x2']
-	ds['x9']=ds['x0']/ds['x3']
-	ds['x10']=ds['x1']/ds['x3']
-	ds['x11']=ds['x2']/ds['x3']
-	ds['x12']=ds['x4']/ds['x5']
-	ds['x13']=ds['x6']/ds['x4']
-	ds['x14']=ds['x4']/ds['x7']
-	ds['x15']=ds['x6']/ds['x5']
-	ds['x16']=ds['x7']/ds['x5']
-	ds['x17']=ds['x6']/ds['x7']
-	return ds
-
-
-
-
-def featScale(ds,mean,std):
-	ds=(ds-mean)/std
+def featScale(ds,minima,maxima):
+	ds=(ds-minima)/(maxima-minima)
 	return ds
 
 
@@ -86,7 +53,44 @@ featureCount=len(columns)-1
 
 dataset.columns=columns
 
-#splitting the dataset
+
+labels=dataset.pop('y')
+
+#Feature-scaling
+orig_minima=dataset.min()
+orig_maxima=dataset.max()
+
+dataset=featScale(dataset, orig_minima, orig_maxima)
+
+dataset['y']=labels
+
+#Initial Histogram
+dataset[dataset['y']==0].hist(bins=50,figsize=(13,13))
+plt.tight_layout()
+plt.savefig('img/init_hist.png')
+plt.close()
+
+dataset=transformFeats(dataset)
+
+#Histogram of transformed features
+dataset[dataset['y']==0].hist(bins=50,figsize=(13,13))
+plt.tight_layout()
+plt.savefig('img/transformed_hist.png')
+plt.close()
+
+
+
+#Pairplot
+
+sns.pairplot(dataset,hue='y',diag_kind='kde',plot_kws={'s':7})
+plt.tight_layout()
+plt.savefig('img/pairplot.png')
+plt.close()
+
+
+
+dataset = dataset.sample(frac=1)
+
 train, cv, test=splitData(dataset)
 
 train_labels=train.pop('y')
@@ -94,109 +98,31 @@ cv_labels=cv.pop('y')
 test_labels=test.pop('y')
 
 
-#initial pairplot to find linearly dependent features
 
-sns.pairplot(train,diag_kind='kde',plot_kws={'s':7})
-plt.savefig('img/init_pairplot.png')
-plt.close()
+model=Gaussian(train.mean(),train.std(),train.columns)
 
+history=model.fit(train,train_labels,cv,cv_labels)
 
-#adding new features
-train=addNewFeats(train)
-cv=addNewFeats(cv)
-test=addNewFeats(test)
+plt.figure(figsize=(12,6))
+plt.subplot(1,2,1)
+plt.plot(history['accuracy'])
+plt.plot(history['val_accuracy'])
 
-#Initial histograms of the features
-train.hist(bins=50,figsize=(13,13))
+plt.xlabel('Iteration')
+plt.ylabel('Accuracy')
+plt.legend(['Training','Cross-Validation'])
+
+plt.subplot(1,2,2)
+plt.plot(history['f1'],'g')
+
+plt.xlabel('Iteration')
+plt.ylabel('F1-score')
+plt.legend(['Cross-Validation'])
 plt.tight_layout()
-plt.savefig('img/init_hist.png')
-plt.close()
+plt.savefig('img/output_measures.png')
 
-orig_mean=train.mean()
-orig_std=train.std()
-
-
-#feature-scaling
-train=featScale(train, orig_mean, orig_std)
-cv=featScale(cv, orig_mean, orig_std)
-test=featScale(test, orig_mean, orig_std)
-
-
-#Final histogram of the transformed gaussian-like features
-train=transformFeats(train)
-cv=transformFeats(cv)
-test=transformFeats(test)
-
-train.hist(bins=50,figsize=(13,13))
-plt.tight_layout()
-plt.savefig('img/transformed_hist.png')
-plt.close()
-
-
-#Evaluating on Cross-Validation set
-
-props=train.describe().transpose()
-train_mean=props['mean']
-train_std=props['std']
-
-clmns=train.columns
-
-'''
-#training probabilities
-train_probs= np.exp((((train-train_mean)/(train_std)) ** 2) * (-1/2)) / (np.sqrt(2 * np.pi) * train_std)
-train_pval=[1]*train[clmns[0]].size
-for i in clmns:
-	train_pval=train_pval*train_probs[i]
-'''
-
-#Cross-Validation set probabilities
-cv_probs= np.exp((((cv-train_mean)/(train_std)) ** 2) * (-1/2)) / (np.sqrt(2 * np.pi) * train_std) #Features' individual probability value
-cv_pval=[1]*cv[clmns[0]].size #Combined probability Value
-
-for i in clmns:
-	cv_pval=cv_pval*cv_probs[i]
-
-
-
-bestF1=0
-bestEpsilon=0
-
-history=[]
-for epsilon in cv_pval:
-	pred=cv_pval<epsilon
-	
-	acc=accuracy_score(cv_labels,pred)
-	recall=recall_score(cv_labels,pred)
-	f1= 2*acc*recall/(acc+recall)
-	if f1>bestF1:
-		bestF1=f1
-		bestEpsilon=epsilon
-	history.append(bestF1)
-
-print('F1-score of the model on CV data: ',bestF1)
-
-plt.plot (history)
-plt.xlabel('Observed Examples of CV set')
-plt.ylabel('F1-Score')
-plt.savefig('img/history.png')
-plt.close()
-
-#Test set probabilities
-
-
-
-test_probs= np.exp((((test-train_mean)/(train_std)) ** 2) * (-1/2)) / (np.sqrt(2 * np.pi) * train_std) #Features' individual probability value
-test_pval = [1] * test[clmns[0]].size #Combined probability Value
-
-for i in clmns:
-	test_pval=test_pval*test_probs[i]
-
-pred=test_pval<bestEpsilon
-acc=accuracy_score(test_labels,pred)
-recall=recall_score(test_labels,pred)
-
-testF1= 2*acc*recall/(acc+recall)
+testAcc,testF1=model.evaluate(test, test_labels)
+print()
+print('Accuracy of the model on Test data: ',testAcc)
 print('F1-score of the model on Test data: ',testF1)
-
-	
 
