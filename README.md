@@ -30,3 +30,6 @@ The transformed features of Non-anomalous examples have a histogram
 # Performance on Cross-Validation and Test data
 
 ![](img/output_measures.png?raw=true "Title")
+
+The plot shows the Training accuracy and Cross-Validation accuracy as well as Cross-Validation F1-score throughout the training epochs. The model chooses those parameters for which the F1-score is maximum on Cross-Validation data, achieving the F1-Score of 0.8564 on Cross-Validation data and 0.8551 on test data.
+.
